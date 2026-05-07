@@ -32,11 +32,11 @@
 % ── Custom macros ───────────────────────────────────────────
 \newcommand{\Rbb}{\mathbb{R}}
 \newcommand{\todo}[1]{\textcolor{red}{[\textbf{TODO:} #1]}}
-\newcommand{\answerYes}[0]{\textcolor{green}{\textbf{Yes}}}
-\newcommand{\answerNo}[0]{\textcolor{red}{\textbf{No}}}
-\newcommand{\answerNA}[0]{\textcolor{gray}{\textbf{N/A}}}
-\newcommand{\answerTODO}[0]{\textcolor{orange}{\textbf{TODO}}}
-\newcommand{\justificationTODO}{\textcolor{orange}{\textit{TODO}}}
+\providecommand{\answerYes}[0]{\textcolor{green}{\textbf{Yes}}}
+\providecommand{\answerNo}[0]{\textcolor{red}{\textbf{No}}}
+\providecommand{\answerNA}[0]{\textcolor{gray}{\textbf{N/A}}}
+\providecommand{\answerTODO}[0]{\textcolor{orange}{\textbf{TODO}}}
+\providecommand{\justificationTODO}{\textcolor{orange}{\textit{TODO}}}
 
 % ── Title ───────────────────────────────────────────────────
 \title{\textcolor{prismblue}{PRISM}: Human \textcolor{prismblue}{P}oint Cloud \textcolor{prismblue}{R}econstruction v\textcolor{prismblue}{i}a \\
@@ -51,30 +51,25 @@
 
 % ────────────────────────────────────────────────────────────
 \begin{abstract}
-mmWave FMCW radar is an ideal modality for human sensing, offering
-all-weather, non-contact, and privacy-preserving perception, yet its
-inherent sparsity severely limits downstream body analysis and no existing
-dataset provides a paired quantitative benchmark for dense human point
-cloud reconstruction under occlusion.
-To close this gap, we present MIST, the first mmWave human point
+Millimeter-wave radar is an ideal modality for human sensing, offering
+all-weather, non-contact, and privacy-preserving perception. Its
+inherent sparsity, however, severely limits downstream body analysis and there exist no available dataset that includes a paired quantitative benchmark for dense human point
+cloud reconstruction under occlusion. We present MIST, the first mmWave human point
 cloud dataset providing a paired quantitative benchmark for
-through-obstacle dense human point cloud reconstruction.
-MIST pairs clear-view and through-obstacle captures of the same subjects
+through-obstacle dense human point cloud reconstruction. MIST pairs clear-view and through-obstacle captures of the same subjects
 performing the same actions via a physical barrier between sensor and
-subject, with synchronized LiDAR as the 3D ground truth and a three-level
-occlusion design converting attenuation severity into a controlled variable,
-spanning 8 subjects, 30 action classes, and 640k paired frames.
-To establish a method baseline on MIST and address the failure of point
+subject, with synchronized LiDAR as the 3D ground truth. A three-level
+occlusion design is incorporated, converting attenuation severity into a controlled variable,
+spanning eight subjects, thirty action classes, and 640~k paired frames. To establish a method baseline on MIST and address the failure of point
 cloud completion under extreme sparsity and human motion, we propose
-PRISM, a skeleton-guided conditional latent diffusion framework
-reconstructing dense human point clouds from sparse mmWave radar alone.
+PRISM, a skeleton-guided conditional latent diffusion framework that reconstructs dense human point clouds from sparse mmWave radar alone.
 Three conditioning streams of skeleton joint positions, coarse body geometry,
 and action class embeddings guide a Dynamic Transformer to denoise under
 a VP-SDE framework, generating LiDAR-quality human point clouds.
 On MIST, PRISM achieves a COV-CD of 0.362 against 0.113 for the strongest
-completion baseline; under through-obstacle attenuation at around 50 points
-per frame where all baselines collapse to fixed-template outputs,
-PRISM maintains meaningful reconstruction.
+completion baseline. We show that 
+PRISM maintains meaningful reconstruction under through-obstacle attenuation at approximately fifty points
+per frame, where all baselines collapse to fixed-template outputs.
 Code and dataset are available at \url{https://mmwave-human.github.io/PRISM/}.
 \end{abstract}
 
@@ -87,66 +82,65 @@ Code and dataset are available at \url{https://mmwave-human.github.io/PRISM/}.
   \centering
   \includegraphics[width=\linewidth, height=12cm, keepaspectratio]{assets/fig/teaser.jpg}
   \caption{
-    Point cloud reconstruction across three timesteps of a bowing sequence:
-    upright, mid-bow, and full bow.
+    Human point cloud quality across three sensing modalities under clear-view
+    and through-obstacle conditions, illustrated with a forward kick action
+    in which the kicking leg is partially occluded.
   }
   \label{fig:teaser}
 \end{figure}
 
-Millimeter-wave FMCW radar has emerged as an increasingly attractive modality
+Millimeter-wave(mmWave) radar has emerged as an increasingly attractive modality
 for non-intrusive human sensing, operating reliably under complete darkness and
 adverse weather without physical contact or line-of-sight
-constraints~\cite{yang2023mmfi,mmwavesurvey}.
-These properties have enabled its adoption across a broad range of body-centric
-tasks, including human activity recognition~\cite{yang2023mmfi,radhar,har_sensors2025},
-skeletal pose estimation~\cite{mmhpe,radarskelet,virteach,points},
-and multi-person localization and tracking~\cite{m3pose}.
+constraints~\cite{yang2023mm,zhang2023survey}.
+These properties have enabled its adoption across a wide range of body-centric
+tasks, including human activity recognition~\cite{yang2023mm,singh2019radhar,chang2025efficient},
+skeletal pose estimation~\cite{wu2024mmhpe,ding2021radar,cao2024virteach,wang2025points},
+and multi-person localization and tracking~\cite{feng2024m3pose}.
 Its point cloud output carries no photorealistic record of the subject's
-appearance, making it particularly well suited for healthcare monitoring and
+appearance, making it particularly well-suited for healthcare monitoring and
 other privacy-sensitive scenarios.
 
 LiDAR and RGB-D cameras produce dense, geometrically accurate reconstructions
 but cannot penetrate solid obstacles, making them unsuitable for through-wall
-human monitoring.
-mmWave FMCW radar uniquely penetrates non-metallic barriers, yet physical antenna
-aperture and bandwidth constraints limit a human body to only 50 to 150 radar
-reflections per frame, far fewer than the thousands of measurements from a LiDAR
-scanner, and partial occlusion by furniture or walls further attenuates these
-already sparse returns.
+human monitoring. Although mmWave frequency-modulated continuous wave (FMCW)
+radar can penetrate non-metallic barriers, physical antenna aperture and
+bandwidth constraints limit its deployment to only 50 to 150 radar reflections
+per frame.
+As Figure~\ref{fig:teaser} shows, occlusion further degrades mmWave point cloud
+quality, while the kicking leg region disappears entirely from the LiDAR scan.
 This combination of through-obstacle capability and inherent sparsity creates a
 dual challenge that no existing dataset or method addresses.
-All existing public mmWave human datasets~\cite{yang2023mmfi,mri,m4human}
+All existing public mmWave human datasets~\cite{yang2023mm,an2022mri,fan2025m4human}
 provide skeleton or mesh annotations while uniformly assuming unobstructed
-sensor placement; datasets that include an occlusion
-scene~\cite{mmbody,rfpose} realise it by covering the sensor surface with
+sensor placement, while datasets that include an occlusion
+scene~\cite{chen2022mmbody,zhao2018through} involve covering the sensor surface with
 materials rather than placing a physical barrier between sensor and subject,
 precluding any simulation of real through-wall deployment and providing no
 paired clear-view reference.
-On the method side, general-purpose point cloud completion
-methods~\cite{pcn,pointr,snowflake} are designed for dense partial
+In terms of the approach, general-purpose point cloud completion
+methods~\cite{yuan2018pcn,yu2021pointr,xiang2021snowflakenet} are designed for dense partial
 observations of rigid synthetic objects and do not model the sequential
 evolution of body geometry across an action.
-As Figure~\ref{fig:teaser} shows, completion and mmWave baselines produce
-near-identical standing shapes at all three timesteps of a bowing sequence,
-from upright through mid-bow to full bow, regardless of pose change.
-No existing method is capable of reconstructing a complete, action-coherent
-human point cloud sequence from sparse radar inputs alone.
 
-To close the dataset gap, we present MIST, the first mmWave dataset with a
+We present MIST, the first mmWave dataset with a
 physical barrier between sensor and subject, providing paired clear-view and
 through-obstacle captures at three controlled occlusion levels with synchronized
-LiDAR ground truth.
+LiDAR as ground truth.
 To achieve human body reconstruction under occlusion, we propose PRISM, a
 skeleton-guided conditional latent diffusion framework that infers radar-aligned
 joint positions from sparse returns at each frame and injects them as structural
 conditioning signals to steer the denoising trajectory toward action-coherent
 dense outputs.
-As Figure~\ref{fig:teaser} shows, PRISM faithfully tracks the full bow arc
-while all baselines produce a static upright shape, achieving COV-CD 0.362
-against 0.113 for the strongest completion baseline, with consistent gains
-across three downstream healthcare monitoring tasks spanning activity
-recognition, fall detection, and rehabilitation exercise assessment.
-Our contributions are as follows.
+As shown in Figure~\ref{fig:teaser}, PRISM reconstructs clear and structured
+human point clouds under both clear-view and through-obstacle conditions,
+faithfully recovering the kicking motion and approaching LiDAR reference
+quality. The quantitative results in Figure~\ref{fig:teaser} further show that
+PRISM substantially outperforms raw mmWave input across three downstream
+healthcare monitoring tasks, where activity recognition accuracy improves from
+52.3\% to 73.1\%, pose estimation MPJPE decreases from 138\,mm to 84\,mm,
+and rehabilitation assessment correlation increases from 0.38 to 0.68.
+Our contributions are as follows:
 
 \begin{itemize}[leftmargin=1.5em,itemsep=2pt]
 
@@ -156,15 +150,13 @@ Our contributions are as follows.
   point clouds as dense reconstruction ground truth.
   A three-level occlusion design converts attenuation severity into a
   controlled experimental variable.
-  MIST covers 8 subjects and 30 action classes spanning rehabilitation and
+  MIST covers eight subjects and thirty action classes spanning rehabilitation and
   daily-living motions, with synchronized LiDAR, depth, and mmWave streams
   supporting multi-modal research.
 
   \item \textbf{PRISM} is a skeleton-guided conditional latent diffusion
   framework that reconstructs dense human point clouds from sparse mmWave
-  radar.
-  A skeleton keypoint detector SkelKD extracts radar-aligned joint positions,
-  and a geometric auto-encoder GeoAE produces stable coarse body geometry
+  radar. PRISM incorporates a skeleton keypoint detector SkelKD that first extracts radar-aligned joint positions before a geometric auto-encoder GeoAE produces stable coarse body geometry
   robust to extreme input sparsity.
   Together with action class embeddings, these conditioning signals guide a
   Dynamic Transformer denoiser under a VP-SDE framework, constraining
@@ -175,7 +167,7 @@ Our contributions are as follows.
   human action recognition, skeletal pose estimation, and rehabilitation
   exercise quality assessment on MIST.
   These benchmarks demonstrate that high-quality reconstruction yields
-  substantial and consistent gains across the full spectrum of body analysis
+  substantial and consistent gains in performance across the full spectrum of body analysis
   required for real-world healthcare monitoring.
 
 \end{itemize}
@@ -184,48 +176,37 @@ Our contributions are as follows.
 \section{Related work}
 \label{sec:related}
 
-\paragraph{mmWave human datasets.}
-All existing mmWave human datasets are collected under obstacle-free
+\paragraph{mmWave-based human sensing datasets.}
+Existing mmWave human datasets are collected under obstacle-free
 conditions.
-MM-Fi~\cite{yang2023mmfi} provides synchronized multi-modal streams and
-M4Human~\cite{m4human} acquires high-fidelity mesh annotations via
-marker-based motion capture, yet both assume no physical barrier between
+MM-Fi~\cite{yang2023mm} provides synchronized multi-modal streams and
+M4Human~\cite{fan2025m4human} acquires high-fidelity mesh annotations via
+marker-based motion capture, yet both datasets were collected in the absence of a physical barrier between
 sensor and subject.
-mmBody~\cite{mmbody} includes an occlusion scene but realises it by
-covering the sensor surface with materials rather than placing a barrier
-between sensor and subject, providing no paired clear-view reference and
-no simulation of real through-wall deployment.
-This systematic gap leaves through-obstacle deployment, the core advantage
-of mmWave over optical sensors, without any quantitative benchmark.
+While mmBody~\cite{chen2022mmbody} includes an occlusion scene, the sensor surface is covered with materials with no paired clear-view reference and
+no simulation of through-wall deployment.
+This systematic gap leaves through-obstacle deployment without any quantitative benchmark.
 
 \paragraph{Point cloud completion and human body reconstruction.}
-Completion methods such as PCN~\cite{pcn} and PoinTr~\cite{pointr} are
-designed for dense partial scans of rigid synthetic objects; under the
-extreme sparsity and non-rigid articulation of human radar returns their
-feature aggregation collapses to semantically empty representations.
-Generative models LION~\cite{lion} and LDT~\cite{ldt} operate in
-hierarchical VAE~\cite{vae} latent spaces with per-step conditioning for
-expressive 3-D generation, yet both condition on global latent codes or
+Completion methods such as PCN~\cite{yuan2018pcn} and PoinTr~\cite{yu2021pointr} have been designed for dense partial scans of rigid synthetic objects\textemdash under the extreme sparsity and non-rigid articulation of human radar returns, their feature aggregation collapses to semantically empty representations. Generative models such as LION~\cite{vahdat2022lion} and LDT~\cite{ji2024latent} operate in
+hierarchical variational autoencoder (VAE)~\cite{kingma2013auto} latent spaces with per-step conditioning for
+expressive 3-D generation. However, both are conditioned on global latent codes or
 dense spatial features extracted from the input rather than structured
-anatomical priors.
-mmPoint~\cite{mmpoint} recovers dense human point clouds from sparse
-mmWave signals via deterministic regression but produces a fixed
+anatomical priors. While mmPoint~\cite{xie2023mmpoint} recovers dense human point clouds from sparse
+mmWave signals via deterministic regression, it generates a fixed
 average-body template under extreme sparsity, leaving action categories
-indistinguishable across frames.
-None of these approaches injects joint-level skeletal topology as a
-structural conditioning signal, and none is designed for action-consistent
+indistinguishable across frames. None of the above approaches incorporates joint-level skeletal topology as a
+structural conditioning signal. In addition, these models are not designed for action-consistent
 generation from streams of extremely sparse radar observations through
 physical barriers.
 
-\paragraph{Downstream body analysis.}
-MiliPoint~\cite{milipoint} establishes multi-class action classification
+\paragraph{Downstream task analysis.}
+MiliPoint~\cite{cui2023milipoint} establishes multi-class action classification
 benchmarks on sparse mmWave radar point clouds, and temporal methods such
-as mmChainPose~\cite{mmchainpose} advance skeletal pose estimation by
-propagating joint geometry cues across consecutive frames; both lines of
-work operate under obstacle-free sensor placement and evaluate on raw
+as mmChainPose~\cite{lu2025mmchainpose} perform skeletal pose estimation by
+propagating joint geometry cues across consecutive frames. Both approaches operate under obstacle-free sensor placement and evaluate on raw
 radar returns rather than reconstructed dense clouds.
-For rehabilitation exercise quality assessment, KIMORE~\cite{kimore}
-provides kinematic scoring benchmarks derived from RGB-D sequences of
+For rehabilitation exercise quality assessment, KIMORE~\cite{capecci2019kimore} offers kinematic scoring benchmarks derived from RGB-D sequences of
 patients performing standardised exercises, demonstrating that precise
 joint trajectory estimates translate to clinically meaningful motion
 quality scores.
@@ -235,7 +216,7 @@ through-obstacle sensor conditions, leaving the downstream utility of
 through-wall radar sensing without direct experimental validation.
 
 % ────────────────────────────────────────────────────────────
-\section{MIST Dataset}
+\section{The MIST Dataset}
 \label{sec:mist}
 % ────────────────────────────────────────────────────────────
 
@@ -250,15 +231,14 @@ through-wall radar sensing without direct experimental validation.
   \label{fig:mist_overview}
 \end{figure}
 
-All existing public mmWave human datasets are collected under
+All publicly available mmWave human datasets are collected under
 obstacle-free conditions, leaving a critical evaluation gap for
 through-obstacle deployment.
-MIST addresses this by placing a physical barrier between sensor and
-subject, providing the first paired quantitative benchmark for
+MIST addresses this by placing a physical barrier between the sensor and a subject, providing the first paired quantitative benchmark for
 through-obstacle dense human point cloud reconstruction.
-Three occlusion levels are defined by the cumulative thickness of 18\,mm
-wooden boards placed between the right-side radar and the subject:
-OL0 uses no board and provides a clear line-of-sight, OL1 interposes one
+Three occlusion levels (OLs) are defined by the cumulative thickness of 18\,mm
+wooden boards placed between the right-side radar and the subject, where
+OL0 provides a clear line-of-sight without any boards, OL1 interposes one
 18\,mm board, and OL2 stacks two boards to a total thickness of 36\,mm.
 The 18\,mm board material matches the signal attenuation characteristics
 of typical indoor partition materials while allowing reproducible,
@@ -267,113 +247,114 @@ A detailed comparison with existing mmWave human datasets is provided
 in Appendix~\ref{app:mist_compare}.
 
 \paragraph{Sensor configuration.}
-Two TI IWR6843 FMCW radars are co-located at door height ($\sim$1.0\,m):
-one provides a clear-view path for OL0 captures and one operates through
-the barrier at OL1 and OL2; collecting both streams simultaneously
+Two TI IWR6843 FMCW radars are co-located at $\sim$1.4\,m, 
+one providing a clear-view path for OL0 capture and one operates through
+the barrier at OL1 or OL2. Collecting both streams simultaneously
 guarantees that every paired frame is captured at an identical subject pose.
 An overhead Livox Mid-360 LiDAR and a door-side Intel RealSense D435i
-depth camera, extrinsic-calibrated to a shared world coordinate frame,
-provide dense point clouds and 17-joint H36M skeleton ground truth~\cite{h36m}.
+depth camera (extrinsic-calibrated to a shared world coordinate frame) provide dense point clouds and 17-joint H36M skeleton ground truth~\cite{ionescu2013human3}.
 Skeleton annotations are extracted at 30\,fps and resampled to 10\,fps
 to match the radar frame rate.
 Sensor specifications are listed in Appendix~\ref{app:mist_sensor}.
 
 \paragraph{Occlusion levels and statistics.}
 MIST defines three occlusion levels by cumulative board thickness.
-OL0, with no board in place, provides clear-view conditions with
-50--150 points per frame and serves as the primary training and evaluation split.
-OL1, with one 18\,mm board, attenuates returns to 25--80 points per frame,
-and OL2, with two stacked boards totalling 36\,mm, further reduces returns
-to 10--30 points per frame.
-The approximately five-fold density reduction from OL0 to OL2 causes
-FPS-based feature aggregation and all completion baselines to produce
-degenerate outputs, making OL1 and OL2 a direct stress test for
-density-invariant reconstruction.
-MIST covers 8 subjects performing 30 action classes across 3 occlusion
-levels with 3 repetitions per subject, yielding approximately 640k
+OL0 provides 50--150 points per frame and serves as the primary training and evaluation split.
+OL1, with a single board, attenuates signal returns to 25--80 points per frame,
+and OL2 further reduces returns
+to 10--30 points per frame due to further signal attenuation from the two stacked boards.
+The approximately five-fold density reduction from OL0 to OL2 causes FPS-based feature aggregation and all completion baselines to produce
+degenerated outputs, making OL1 and OL2 a direct stress test for
+density-invariant reconstruction. MIST covers eight subjects performing thirty action classes across three occlusion
+levels with three repetitions per subject, yielding approximately 640 k
 paired frames.
 
 \paragraph{Action categories.}
-The 30 action classes span two functional categories.
-The rehabilitation category R01 to R14 covers 14 classes targeting
+The thirty action classes span two functional categories.
+The rehabilitation category R01 to R14 covers fourteen classes targeting
 upper and lower limb mobility, balance, and gait assessment relevant
 to clinical motion screening.
-The daily-living category D01 to D16 covers 16 classes of whole-body
+The daily-living category D01 to D16 covers sixteen classes of whole-body
 movements frequent in elderly-care monitoring, including D16 Forward
-Fall which directly supports fall detection as a downstream task.
-Of the 30 classes, 8 share equivalent kinematic categories with MM-Fi,
-enabling direct cross-dataset transfer evaluation; the complete action
+Fall, which directly supports fall detection as a downstream task.
+Of the thirty classes, eight share equivalent kinematic categories with MM-Fi,
+enabling direct cross-dataset transfer evaluation, and the complete action
 list is provided in Appendix~\ref{app:mist_actions}.
 
-
-\section{Method}
-\label{sec:method}
 
 % ── Full architecture figure ─────────────────────────────────
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{assets/fig/PRISM architecture overview.jpg}
   \caption{
-    Overview of PRISM's two-path architecture: a condition path assembling skeleton,
-    geometry, and action signals, and a diffusion path denoising a structured latent
-    guided by those conditions to recover the dense point cloud.
+    Overview of our proposed PRISM model, which consists of a skeleton alignment stage and a completion refinement stage. In the skeleton alignment stage, we extract and align multimodal features from LiDAR point clouds (dense), depth camera skeletons, and mmWave point clouds (sparse). These features serve as clean tokens and conditional information for the completion refinement stage. Notably, we design SkelKD and Temporal Adapter modules to respectively align skeleton predictions based on mmWave point clouds and fuse features across multiple time steps. In the completion refinement stage, we design a conditional DDPM equipped with clean tokens and conditional information from the previous stage to reconstruct enhanced point clouds, especially when the mmWave point clouds are partially occluded at test time.
   }
   \label{fig:arch}
 \end{figure}
-PRISM follows the two-path design in Figure~\ref{fig:arch}.
-The condition path processes the sparse mmWave cloud $X$ through SkelKD,
-GeoAE, and an action class embedding, assembling the three streams into a
-condition K/V sequence that is injected at every denoising layer.
-The diffusion path encodes $X$ into a compact structured latent via HierVAE,
-iteratively denoises it under a VP-SDE schedule with the condition K/V driving
-each Dynamic Transformer layer, and decodes the result to a dense output point cloud.
 
-\subsection{SkelKD: skeleton keypoint detector}
-\label{sec:skelkd}
+\section{Method}
+\label{sec:method}
 
-SkelKD takes the sparse mmWave cloud $X$ as its sole input and regresses
-radar-aligned skeleton joints $\hat{P}\!\in\!\Rbb^{B\times17\times3}$,
-using depth-camera annotations only as training supervision.
-Recent benchmarks on sparse mmWave point clouds show that lightweight MLP
-and convolution designs consistently match or outperform transformer-based
-architectures: with fewer than 200 returns per frame, self-attention is
-starved of sufficient local context to be beneficial~\cite{milipoint,pointmlp}.
-SkelKD therefore uses a lightweight convolution-based feature extractor~\cite{pointnet};
-the predicted $\hat{P}$ is then encoded by a GCN into 17 joint condition
-tokens that guide the Dynamic Transformer.
+% ── Full architecture figure ─────────────────────────────────
 
-Nearest-neighbor joint-to-point mapping degenerates when joints are occluded or
-attenuated, collapsing to an arbitrary distant return.
-SkelKD instead uses 17 learnable joint query embeddings as cross-attention~\cite{transformer}
-queries over per-point features extracted by two Conv1D layers,
-$f_\text{local}\!\in\!\Rbb^{B\times N\times128}$,
-concatenated with a global silhouette descriptor
-$f_\text{global}\!\in\!\Rbb^{B\times256}$:
-\begin{equation}
-  f_\text{joint} = \mathrm{softmax}\!\left(\tfrac{QK^\top}{\sqrt{d}}\right)V,
-  \quad Q\!\in\!\Rbb^{17\times128},\ K,V\!\in\!\Rbb^{N\times128}.
-\end{equation}
-Each query attends over all $N$ points, so occluded joints spread attention
-across visible returns rather than collapsing to a single noisy match.
-A shared-weight MLP then maps
-$[f_\text{joint}\,\|\,f_\text{global}]\!\in\!\Rbb^{B\times17\times384}$
-to 3-D coordinates:
-\begin{equation}
-  \hat{P} = \mathrm{MLP}_\text{reg}\!\left([f_\text{joint}\,\|\,f_\text{global}]\right),
-  \quad \hat{P}\!\in\!\Rbb^{B\times17\times3}.
-\end{equation}
-SkelKD is trained with
-$\mathcal{L}_\text{SkelKD} = \mathcal{L}_\text{MPJPE} + 0.1\,\mathcal{L}_\text{bone}$,
-with Gaussian noise augmentation at $\sigma\!=\!0.03$ and random joint masking
-of up to 4 joints at 30\% probability to simulate radar occlusion.
-Weights are frozen after pre-training so the diffusion stage trains against a
-stable skeleton representation.
+% PRISM follows the two-path design in Figure~\ref{fig:arch}.
+We propose PRISM, a new skeleton-guided multimodal diffusion model. Thereafter, we verify the effectiveness and robustness of human point cloud reconstruction from mmWave radar using our proposed MIST benchmark for healthcare downstream applications. During training, PRISM accepts multimodal inputs including mmWave, LiDAR, and deep camera, and learns a jointly aligned multimodal latent space for enhanced human point cloud reconstruction. During inference, PRISM achieves generalization using only mmWave input under various degrees of occlusion. 
+
+\subsection{PRISM}
+\label{sec:overview}
+As illustrated in Fig. \ref{fig:arch}, PRISM consists of the skeleton alignment and completion refinement stage. The skeleton alignment stage focuses on extracting, fusing, and aligning multimodal features of input sequences. These input sequences are derived from non-occluded LiDAR point clouds $\boldsymbol{x}_{\rm{lidar}} \in \mathbb{R}^{t \times m \times 3}$, deep camera skeletons $\boldsymbol{x}_{\rm{deep}} \in \mathbb{R}^{t \times p \times 3}$, and partially-occluded mmWave point clouds $\boldsymbol{x}_{\rm{mmwave}} \in \mathbb{R}^{t \times n \times 3}$. Here, $t$ denotes the number of frames within  the point cloud sequence, $m$ and $n$ are the number of points per frame, and $p$ is the number of skeleton keypoints, such that $m > n \gg p$ in practice.
+The temporal-fused LiDAR point cloud features, sampled under the guidance of deep camera skeletons, can be expressed as $\boldsymbol{h}_{\rm{lidar}}=f_{\boldsymbol{\theta}_{\rm{PE}},\boldsymbol{\theta}_{\rm{TA}}}(\boldsymbol{x}_{\rm{lidar}}, \boldsymbol{x}_{\rm{deep}})\in \mathbb{R}^{t \times m \times d_{\rm{lidar}}}$, where $d_{\rm{lidar}}$ is the feature  dimension, $\boldsymbol{\theta}_{\rm{PE}}$ and $\boldsymbol{\theta}_{\rm{TA}}$ denote, respectively, the parameters of the PE Encoder \cite{yuan2018pcn} and our proposed Temporal Adapter module (see details presented in Sec. \ref{sec:adapter}).
+We propose SkelKD (see details in Sec. \ref{sec:skelkd}) to predict skeleton keypoints $\boldsymbol{x}_{\rm{skelKD}} \in \mathbb{R}^{t \times p \times 3}$ from the point-wise features of mmWave point clouds extracted by a cascaded PCN Encoder~\cite{kipf2016semi} and our proposed Temporal Adapter module. A GCN Encoder~\cite{tang2022lake} is subsequently employed to further aggregate the spatial information of the predicted skeleton keypoints $\boldsymbol{x}_{\rm{skelKD}}$, resulting in enhanced skeleton points $\boldsymbol{x}_{\rm{skelKD}}^{\rm{enhance}}$ with the same shape as $\boldsymbol{x}_{\rm{skelKD}}$.
+
+At the skeleton alignment stage, a PE Encoder is used to extract features from LiDAR point clouds and skeleton data from the deep camera. These features are subsequently fused across multiple time steps by the proposed Temporal Adapter module. An Auto-encoder comprising a PCN Encoder, another Temporal Adapter, and a Coarse Generator is then proposed to extract features from mmWave radar data. At the completion refinement stage, we design a conditional DDPM \cite{ho2020denoising} for human point cloud reconstruction by first treating the output of Temporal Adapter as clean data (tokens) before adding noise to obtain noisy tokens. Conditional injection is then constructed using the outputs of the GCN Encoder and the Coarse Generator along with action encoding as conditional information. This information is then used to denoise the noisy tokens into their clean counterparts.
+
+\textbf{Skeleton Alignment}:
+% At training time, w
+We use a triplet of inputs including non-occluded LiDAR point clouds $\boldsymbol{x}_{\rm{lidar}} \in \mathbb{R}^{t \times m \times 3}$, non-occluded deep camera skeletons $\boldsymbol{x}_{\rm{deep}} \in \mathbb{R}^{t \times p \times 3}$, and partially occluded mmWave point clouds $\boldsymbol{x}_{\rm{mmwave}} \in \mathbb{R}^{t \times n \times 3}$. Here $t$ denotes the number of frame in the point cloud sequence, $m$ and $n$ are the number of points per frame, and $p$ is the number of skeleton keypoints. $\boldsymbol{x}_{\rm{lidar}}$ and $\boldsymbol{x}_{\rm{deep}}$ serve as ground truth signals, which are used to recover dense point clouds from 
+% the mmWave inputs 
+$\boldsymbol{x}_{\rm{mmwave}}$.
+
+We use a PE Encoder \cite{yuan2018pcn} to extract point cloud features $\boldsymbol{h}_{\rm{lidar}}^{\rm{PE}} \in \boldmath{R}^{t \times m \times d}$, where $d$ is the feature dimension. In practice, $\boldsymbol{x}_{\rm{lidar}}$ is dense (e.g., $m$ is large). To reduce memory consumption while preserving feature representativeness, we use $\boldsymbol{x}_{\rm{deep}}$ to guide the selection of point cloud features. Specifically, we only consider point cloud features near the skeleton keypoints. Thus, we have $\boldsymbol{h}_{\rm{lidar}}^{\rm{PE}}=f_{\boldsymbol{\theta}_{\rm{PE}}}(\boldsymbol{x}_{\rm{lidar}}, \boldsymbol{x}_{\rm{deep}})$. We then propose a Temporal Adapter (see details in Sec. \ref{sec:adapter}) to fuse the temporal features of $\boldsymbol{h}_{\rm{lidar}}^{\rm{PE}}$, which is expressed as $\boldsymbol{h}_{\rm{lidar}}^{\rm{TA}}=f_{\boldsymbol{\theta}_{\rm{TA}}}(\boldsymbol{h}_{\rm{lidar}}^{\rm{PE}})$, where $\boldsymbol{h}_{\rm{lidar}}^{\rm{TA}} \in \mathbb{R}^{t \times m \times d}$.
+
+We propose an AutoEncoder to extract point-wise features $\boldsymbol{h}_{\rm{mmwave}}^{{\rm{PCN}},1} \in \mathbb{R}^{t \times n \times d}$ preparing for generate the inputs of SkelKD (see details in Sec. \ref{sec:skelkd}) and the coarse points $\boldsymbol{x}_{\rm{mmwave}}^{\rm{CG}} \in \mathbb{R}^{t \times \alpha n \times 3}$, where $\alpha \geq 1$. Specifically, .
+
+
+
+, global features $\boldsymbol{h}_{\rm{mmwave}}^{{\rm{PCN}},2} \in \mathbb{R}^{t \times n \times d}$, and coarse points $\boldsymbol{x}_{\rm{mmwave}}^{\rm{CG}} \in \mathbb{R}^{t \times \alpha n \times 3}$. Specifically, .
+
+We use a GCN Encoder \cite{kipf2016semi} to extract .
+
+
+\textbf{Completion Refinement}
+
+
+
+\textbf{Temporal Adapter}:
+Taking the Temporal Adapter applied on top of the PE encoder as an example (the same design is used for the Temporal Adapter after the PCN encoder). Specifically, we obtain temporally fused features $\boldsymbol{h}_{\rm{lidar}}^{\rm{TA}}$ by introducing a Transformer encoder layer parameterized by $\boldsymbol{\theta}_{\rm{TA}}$ on top of the frame-level features $\boldsymbol{h}_{\rm{lidar}}^{\rm{PE}} \in \mathbb{R}^{t \times q}$ from the PE Encoder, where $q = m \times d$ and $d$ is the feature dimension. Self-attention is applied along the temporal dimension.
+
+
+\textbf{SkelKD} (Figure~\ref{fig:skelkd}):
+SkelKD regresses radar-aligned skeleton points $\boldsymbol{x}_{\rm{skelKD}}$ using PointNet \cite{qi2017pointnet}, a lightweight CNN-based feature extractor, from sparse mmWave point clouds $\boldsymbol{x}_{\rm{mmwave}}$ with deep camera supervision only. To avoid nearest-neighbor collapse under occlusion, SkelKD uses $p$ learnable joint query embeddings as cross-attention queries over per-point features extracted by a per-point MLP ($3\!\to\!64\!\to\!128$), with symmetric max-pooling over all $N$ returns yielding a global silhouette descriptor $\boldsymbol{h}_{\rm{global}}\!\in\!\mathbb{R}^{B\times256}$. Each query embedding attends over the full point set via scaled dot-product attention $\boldsymbol{f}_{\rm{joint}} = \mathrm{softmax}(QK^\top\!/\!\sqrt{d})\,V$ with $Q\!\in\!\mathbb{R}^{p\times128}$ and $K,V\!\in\!\mathbb{R}^{N\times128}$, so occluded joints spread their response across all visible returns rather than anchoring to a single noisy neighbor. The concatenated joint attention features and broadcast global descriptor are then mapped through a residual MLP regression head to per-joint 3-D coordinates $\boldsymbol{x}_{\rm{skelKD}}\!\in\!\mathbb{R}^{t\times p\times3}$. SkelKD is trained with $\mathcal{L}_{\rm{SkelKD}} = \mathcal{L}_{\rm{MPJPE}} + 0.1\,\mathcal{L}_{\rm{bone}}$, where $\mathcal{L}_{\rm{bone}}$ penalizes left-right bone-length asymmetry to enforce anatomical plausibility under partial observation. After Stage~1 pre-training, all SkelKD weights are frozen so that the diffusion stage trains against a stable skeleton representation, decoupled from denoiser co-adaptation.
+
+
+\subsection{Completion Refinement}
+
+\textbf{Forward Diffusion}: .
+
+
+
+\textbf{Backward Diffusion}: .
+
+
+\textbf{Training and Inference}: .
+
+
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=\linewidth]{assets/fig/SkelKD.jpg}
   \caption{
-    SkelKD architecture: 17 learnable joint query embeddings attend over
+    SkelKD architecture in which 17 learnable joint query embeddings attend over
     encoded radar returns via cross-attention to regress radar-aligned skeleton joints.
   }
   \label{fig:skelkd}
@@ -388,18 +369,18 @@ Transformer.
 
 \paragraph{Skeleton GCN encoder.}
 The radar-aligned skeleton $\hat{P}$ output by SkelKD is encoded by a 2-layer
-GCN~\cite{gcn} defined on the H36M-17 joint topology~\cite{h36m}.
+GCN~\cite{kipf2016semi} defined on the H36M-17 joint topology~\cite{ionescu2013human3}.
 The symmetrically normalized adjacency matrix
 $\hat{A} = D^{-1/2}(A+I)D^{-1/2}$ propagates kinematic-chain relationships
 across the skeleton graph:
 $H^{(l+1)} = \sigma\!\left(\hat{A}\,H^{(l)}\,W^{(l)}\right)$,
-with GELU activation and LayerNorm~\cite{layernorm} at each layer.
+with GELU activation and LayerNorm~\cite{ba2016layer} at each layer.
 This graph-structured encoding is essential for distal joints such as wrists
 and ankles, where per-joint features alone provide insufficient context.
 The GCN maps each joint to a 256-dimensional feature space,
 producing 17 topology-aware node features $F_s$ projected to
-$\mathrm{KV}_s\!\in\!\Rbb^{B\times256\times17}$;
-their mean pool $g_s\!=\!\mathrm{MeanPool}(F_s)$ feeds the global modulation
+$\mathrm{KV}_s\!\in\!\Rbb^{B\times256\times17}$,
+with their mean pool $g_s\!=\!\mathrm{MeanPool}(F_s)$ feeding the global modulation
 signal $c$.
 
 \paragraph{Coarse geometry via GeoAE.}
@@ -412,7 +393,7 @@ $C\!\in\!\Rbb^{B\times128\times3}$.
 The encoder extracts per-point features through two successive 1-D convolution
 layers, followed by symmetric max-pooling to obtain a global feature $f_g\!\in\!\Rbb^{B\times256}$.
 The decoder unfolds $f_g$ via transposed convolution into 128 seed points,
-which are then refined through three MLP-Residual blocks~\cite{resnet} and a final projection
+which are then refined through three MLP-Residual blocks~\cite{he2016deep} and a final projection
 layer to produce the output coordinates $C$.
 GeoAE is trained jointly with the diffusion stage under
 $\mathcal{L}_\text{AE} = 0.1\,\mathcal{L}_\text{CD}(C, X_\text{GT})$.
@@ -437,7 +418,7 @@ This signal $c$ modulates the scale and shift parameters of every Adaptive
 LayerNorm in the Dynamic Transformer, ensuring action identity biases
 the full denoising trajectory.
 During training, each of the three streams is independently dropped with 10\%
-probability to enable Classifier-Free Guidance (CFG)~\cite{cfg} at inference.
+probability to enable Classifier-Free Guidance (CFG)~\cite{ho2022classifier} at inference.
 
 The skeleton and coarse-geometry token sets are concatenated:
 \begin{equation}
@@ -453,20 +434,20 @@ forming the 145-token K/V sequence injected into every Cross-Attention layer.
 \paragraph{Structured latent space.}
 Diffusing directly in raw point cloud space is statistically unstable for
 variable-density inputs and computationally prohibitive.
-Following~\cite{lion,ldm}, we operate in a compact, fixed-size latent space that
+Following~\cite{vahdat2022lion,rombach2022high}, we operate in a compact, fixed-size latent space that
 decouples generation from input density.
-A hierarchical VAE~\cite{vae} encoder maps $X$ into a structured latent
+A hierarchical VAE~\cite{kingma2013auto} encoder maps $X$ into a structured latent
 $Z_0\!\in\!\Rbb^{B\times8\times120}$ through six levels of local grouping,
-residual self-attention, and VAE posterior sampling; the decoder produces
+residual self-attention, and VAE posterior sampling, and the decoder produces
 $K\!=\!256$ output points independently of the encoder resolution.
 The VAE is pre-trained with
 $\mathcal{L}_\text{VAE}=\mathcal{L}_\text{CD}+\mathcal{L}_\text{EMD}
-+10^{-4}\mathcal{L}_\text{KL}$~\cite{emd} and then frozen, so the denoiser trains within
++10^{-4}\mathcal{L}_\text{KL}$~\cite{rubner2000earth} and then frozen, so the denoiser trains within
 a stable, pre-defined latent geometry.
 Full architecture hyperparameters are in Appendix~\ref{app:arch}.
 
 \paragraph{VP-SDE forward process.}
-A variance-preserving SDE~\cite{song2021score,ddpm} corrupts the clean latent $Z_0$ over $T\!=\!1000$ steps:
+A variance-preserving SDE~\cite{song2020score,ho2020denoising} corrupts the clean latent $Z_0$ over $T\!=\!1000$ steps:
 \begin{equation}
   q(Z_t\mid Z_{t-1})
     = \mathcal{N}\!\left(Z_t;\,\sqrt{1-\beta_t}\,Z_{t-1},\,\beta_t I\right),
@@ -479,22 +460,22 @@ converges to an isotropic Gaussian, giving a well-conditioned reverse process.
 \paragraph{Dynamic Transformer denoising network.}
 The denoising network receives $Z_t\!\in\!\Rbb^{B\times8\times120}$ and predicts
 the score $\nabla_{Z_t}\log q(Z_t)$.
-A point-wise projection maps $Z_t$ to $d_\text{model}\!=\!256$;
-six ResidualBlocks then alternate cross-attention over the 145-token K/V sequence
+A point-wise projection maps $Z_t$ to $d_\text{model}\!=\!256$,
+and six ResidualBlocks then alternate cross-attention over the 145-token K/V sequence
 (blocks 1, 3, 5) with self-attention only (blocks 2, 4, 6).
-Following~\cite{ldt,dit}, each block applies an independent AdaLN modulation driven
+Following~\cite{ji2024latent,peebles2023scalable}, each block applies an independent AdaLN modulation driven
 by $c = e_t + e_y + \mathrm{Linear}(g_s)$, coupling timestep, action, and coarse
 pose into every normalization layer.
 The output tokens are projected back to $z_\text{dim}\!=\!120$ to yield the
 predicted noise $\hat{\epsilon}$.
-At inference, 200-step ancestral sampling with classifier-free guidance~\cite{cfg}
+At inference, 200-step ancestral sampling with classifier-free guidance~\cite{ho2022classifier}
 combines conditioned and unconditional predictions:
 \begin{equation}
   \hat{\epsilon}
     = \epsilon_\theta(Z_t,t)
       + w\bigl(\epsilon_\theta(Z_t,t,\tau(Y)) - \epsilon_\theta(Z_t,t)\bigr),
 \end{equation}
-where $w$ is the guidance scale; the decoded latent yields
+where $w$ is the guidance scale and the decoded latent yields
 $X_f\!\in\!\Rbb^{B\times256\times3}$.
 The training objective is:
 \begin{equation}
@@ -509,7 +490,7 @@ where the auxiliary term keeps the coarse geometry stream geometrically grounded
 \label{sec:exp}
 % ────────────────────────────────────────────────────────────
 
-\subsection{Experimental Setup}
+\subsection{Experiment Setup}
 \label{sec:setup}
 % ────────────────────────────────────────────────────────────
 
@@ -517,7 +498,7 @@ where the auxiliary term keeps the coarse geometry stream geometrically grounded
   \centering
   \includegraphics[width=0.75\linewidth]{assets/fig/MIST.jpg}
   \caption{
-    MIST collection setup: no board for OL0, one 18\,mm board for OL1, and
+    MIST collection setup showing no board for OL0, one 18\,mm board for OL1, and
     two stacked 18\,mm boards for OL2 are placed between the subject and the
     right-side mmWave radar, while the left-side LiDAR, mmWave radar, and
     depth camera remain unoccluded to provide ground truth.
@@ -529,8 +510,8 @@ Data collection took place in a controlled indoor laboratory with
 approximately 5\,m by 6\,m usable floor area, as illustrated in
 Figure~\ref{fig:mist_setup}.
 Subjects performed all actions at 2 to 3\,m from the sensor array.
-For OL0 no board was placed; for OL1 one 18\,mm wooden board was
-interposed between the right-side mmWave radar and the subject; for OL2
+For OL0 no board was placed, for OL1 one 18\,mm wooden board was
+interposed between the right-side mmWave radar and the subject, and for OL2
 two boards were stacked to a total thickness of 36\,mm to increase attenuation.
 The left-side LiDAR, mmWave radar, and depth camera remained unoccluded
 throughout, collecting complete unoccluded captures as dense reconstruction
@@ -545,12 +526,12 @@ Subjects P01 to P06 form the training split and P07 to P08 the held-out
 evaluation split.
 All three occlusion levels are evaluated without obstacle-specific
 adaptation, providing a zero-shot test of density-invariant generalization.
-Training follows four sequential stages: SkelKD pretraining, HierVAE
+Training follows four sequential stages of SkelKD pretraining, HierVAE
 pretraining, joint optimization of the Dynamic Transformer with frozen VAE,
-and end-to-end fine-tuning; all stages use Adam~\cite{adam} with cosine learning-rate
-decay and full hyperparameters are listed in Appendix~\ref{app:training}.
+and end-to-end fine-tuning, with all stages using Adam~\cite{kingma2014adam} with cosine learning-rate
+decay and full hyperparameters listed in Appendix~\ref{app:training}.
 Cross-dataset generalization results, where all models are trained on
-MIST and evaluated directly on MM-Fi~\cite{yang2023mmfi} using the
+MIST and evaluated directly on MM-Fi~\cite{yang2023mm} using the
 8 shared action classes, are reported in Appendix~\ref{app:mmfi_results}.
 
 \subsection{Quantitative results on MIST}
@@ -568,7 +549,7 @@ Results are reported per action and averaged over all 30 action classes.
   \centering
   \caption{
     Per-action point cloud quality on MIST-OL0
-    (COV-CD$\uparrow$, MMD-CD$\downarrow$ scaled $\times10^{-3}$;
+    (COV-CD$\uparrow$, MMD-CD$\downarrow$ scaled $\times10^{-3}$,
     all baselines re-trained on P01--P06).
   }
   \label{tab:main}
@@ -585,13 +566,13 @@ Results are reported per action and averaged over all 30 action classes.
     \cmidrule(lr){3-4}\cmidrule(lr){5-6}\cmidrule(lr){7-8}\cmidrule(lr){9-10}
       & & COV & MMD & COV & MMD & COV & MMD & COV & MMD \\
     \midrule
-    PCN~\cite{pcn}                & Compl. & 0.079 & 9.16  & 0.088 & 8.92  & 0.082 & 9.04  & 0.083 & 9.01  \\
-    PoinTr~\cite{pointr}          & Compl. & 0.108 & 8.37  & 0.121 & 8.14  & 0.114 & 8.25  & 0.113 & 8.26  \\
-    SnowflakeNet~\cite{snowflake} & Compl. & 0.071 & 10.86 & 0.083 & 10.61 & 0.076 & 10.74 & 0.079 & 10.72 \\
-    LAKe-Net~\cite{lakenet}       & Compl. & 0.080 & 8.78  & 0.091 & 8.57  & 0.083 & 8.69  & 0.085 & 8.69  \\
-    mmPoint~\cite{mmpoint}        & Radar  & 0.090 & 9.03  & 0.103 & 8.79  & 0.096 & 8.91  & 0.097 & 8.91  \\
-    LION~\cite{lion}              & Gen.   & 0.173 & 7.49  & 0.192 & 7.27  & 0.183 & 7.38  & 0.185 & 7.37  \\
-    TIGER~\cite{tiger}            & Gen.   & 0.197 & 7.21  & 0.219 & 6.97  & 0.209 & 7.11  & 0.209 & 7.08  \\
+    PCN~\cite{yuan2018pcn}                & Compl. & 0.079 & 9.16  & 0.088 & 8.92  & 0.082 & 9.04  & 0.083 & 9.01  \\
+    PoinTr~\cite{yu2021pointr}          & Compl. & 0.108 & 8.37  & 0.121 & 8.14  & 0.114 & 8.25  & 0.113 & 8.26  \\
+    SnowflakeNet~\cite{xiang2021snowflakenet} & Compl. & 0.071 & 10.86 & 0.083 & 10.61 & 0.076 & 10.74 & 0.079 & 10.72 \\
+    LAKe-Net~\cite{tang2022lake}       & Compl. & 0.080 & 8.78  & 0.091 & 8.57  & 0.083 & 8.69  & 0.085 & 8.69  \\
+    mmPoint~\cite{xie2023mmpoint}        & Radar  & 0.090 & 9.03  & 0.103 & 8.79  & 0.096 & 8.91  & 0.097 & 8.91  \\
+    LION~\cite{vahdat2022lion}              & Gen.   & 0.173 & 7.49  & 0.192 & 7.27  & 0.183 & 7.38  & 0.185 & 7.37  \\
+    TIGER~\cite{ren2024tiger}            & Gen.   & 0.197 & 7.21  & 0.219 & 6.97  & 0.209 & 7.11  & 0.209 & 7.08  \\
     \midrule
     PRISM (ours)                  & Gen.
       & 0.342 & 5.19
@@ -616,7 +597,7 @@ action-agnostic radar input.
 LION and TIGER fare noticeably better by sampling from a learned distribution,
 achieving COV-CD 0.185 and 0.209 respectively.
 Their remaining gap relative to PRISM reveals the limit of distribution diversity
-without structural grounding: the generated shapes cover the marginal body
+without structural grounding, as the generated shapes cover the marginal body
 distribution but are not steered toward any particular action.
 
 PRISM achieves a COV-CD of 0.362 and an MMD-CD of $4.91\!\times\!10^{-3}$,
@@ -777,7 +758,7 @@ presented in Appendix~\ref{app:qual_main}.
 
 Figure~\ref{fig:ablation} reports the contribution of each conditioning module
 on the MIST-OL0 validation split.
-SkelKD is the dominant component: its removal drops COV-CD from 0.375 to 0.289
+SkelKD is the dominant component, as its removal drops COV-CD from 0.375 to 0.289
 and raises MMD-CD to 6.34, the largest single-module degradation.
 GeoAE and GCN each contribute meaningfully, reducing COV-CD to 0.299 and 0.321
 respectively when removed, confirming that stable coarse geometry and kinematic-chain
@@ -791,44 +772,65 @@ Through-obstacle robustness on OL1 and OL2 is reported in Appendix~\ref{app:mist
 \subsection{Downstream task evaluation}
 \label{sec:downstream}
 
-PRISM reconstructs dense human point clouds from mmWave radar alone; these
-reconstructions substantially outperform raw mmWave input across all three tasks
-and all occlusion levels, demonstrating that high-quality reconstruction directly
-translates to downstream task gains.
-We evaluate using a shared PointNet++ backbone~\cite{pointnet,qi2017pointnet2} with a
-lightweight task-specific head trained independently per input condition.
-We compare raw mmWave input, PoinTr as the strongest completion baseline, TIGER as
-the strongest generative baseline, and PRISM across OL0 to OL2.
-An unoccluded LiDAR oracle provides a modality upper bound at HAR 85.6\%, Fall F1
-0.912, HPE 58\,mm, and Rehab $r\!=\!0.79$; because its input modality differs from
-all compared methods, it is reported here for reference rather than listed as a table row.
-Table~\ref{tab:downstream} shows that the reconstruction advantage over raw mmWave
-grows as occlusion severity increases.
+We evaluate downstream utility across three tasks using a shared PointNet++
+backbone~\cite{qi2017pointnet,qi2017pointnetpp} with lightweight task-specific heads,
+comparing raw mmWave input against PoinTr, TIGER, and PRISM across OL0 to OL2.
+Figure~\ref{fig:radar} summarises performance on five evaluation axes: HAR
+accuracy at OL0, fall detection F1, pose estimation quality, rehabilitation
+assessment correlation, and robustness at OL2.
+An unoccluded LiDAR oracle forms the outer ring as the modality upper bound.
+PRISM leads all reconstruction baselines on every axis, and the advantage over
+raw mmWave widens consistently as occlusion severity increases.
 
-\paragraph{Human activity recognition (HAR).}
-A two-layer MLP with layer widths 512, 256, and 30 and dropout 0.3 is trained for
-30-class classification on subjects P01 to P06 and evaluated on P07 to P08.
-PRISM achieves 73.1\% top-1 accuracy at OL0 versus 52.3\% for raw mmWave; under
-heavy occlusion at OL2 the gap widens to 24.1 percentage points at 59.3\% versus
-35.2\%.
-For fall detection, PRISM reaches F1\,=\,0.851 against 0.628 for raw mmWave.
+\begin{figure}[t]
+  \centering
+  \begin{minipage}[b]{0.52\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{assets/fig/downstream_radar.jpg}
+    \caption{Downstream task performance radar chart across five axes.
+      LiDAR Oracle (grey) defines the outer ring.}
+    \label{fig:radar}
+  \end{minipage}
+  \hfill
+  \begin{minipage}[b]{0.45\linewidth}
+    \centering
+    \includegraphics[width=\linewidth]{assets/fig/tsne_action.jpg}
+    \caption{t-SNE of action features on 16 daily-living classes.
+      (a)~Raw mmWave input and (b)~PRISM reconstruction.}
+    \label{fig:tsne}
+  \end{minipage}
+\end{figure}
 
-\paragraph{Human pose estimation (HPE).}
-A 17-joint regression head predicts H36M-convention joint coordinates; MPJPE is
-reported in millimetres.
-PRISM reduces MPJPE from 138\,mm to 84\,mm at OL0, and at the most severe level OL2
-still achieves 112\,mm, which remains below raw mmWave under clear-view OL0
-conditions at 138\,mm, demonstrating that reconstruction compensates for substantial
-signal attenuation.
-The gap between PRISM and raw mmWave grows from 54\,mm at OL0 to 79\,mm at OL2.
+\paragraph{Human activity recognition.}
+We use the 16 daily-living action classes in MIST for this evaluation.
+PRISM reaches 73.1\% top-1 accuracy at OL0, which is 20.8 percentage
+points above raw mmWave and 5.9 points above TIGER.
+Under heavy occlusion at OL2 the margin widens to 24.1 percentage points,
+showing that reconstruction disproportionately benefits harder sensing conditions.
+The t-SNE visualization in Figure~\ref{fig:tsne} corroborates this at the feature
+level, where raw mmWave roughly separates broad action groups but still confuses similar
+motion types such as lower-body activities, while PRISM reconstructions form
+tighter and more separable clusters despite residual coupling between adjacent
+classes.
+
+\paragraph{Human pose estimation.}
+A 17-joint regression head predicts H36M-convention joint coordinates, with
+accuracy measured in MPJPE, and full results appear in Table~\ref{tab:downstream}.
+PRISM reduces MPJPE from 138\,mm to 84\,mm at OL0 and still achieves 112\,mm
+at OL2, which remains below raw mmWave at clear-view OL0, demonstrating that
+reconstruction compensates effectively for through-obstacle signal attenuation.
+The MPJPE gap between PRISM and raw mmWave grows from 54\,mm at OL0 to 79\,mm
+at OL2.
 
 \paragraph{Rehabilitation exercise quality assessment.}
-Per-joint velocity cosine similarity is used to derive motion quality scores for R01
-to R14; Pearson correlation with LiDAR reference scores is reported.
-PRISM reaches $r\!=\!0.68$ at OL0 against $r\!=\!0.51$ for PoinTr and $r\!=\!0.38$
-for raw mmWave, and maintains $r\!=\!0.53$ at OL2 while raw mmWave falls to
-$r\!=\!0.24$, confirming that PRISM supports clinically meaningful exercise monitoring
-without unobstructed sensor placement even under severe through-obstacle attenuation.
+Motion quality scores derived from per-joint velocity cosine similarity for classes
+R01--R14 are compared with LiDAR reference scores by Pearson correlation,
+with detailed results in Table~\ref{tab:downstream}.
+PRISM achieves $r\!=\!0.68$ at OL0, surpassing raw mmWave at $r\!=\!0.38$ and
+PoinTr at $r\!=\!0.51$.
+At OL2, PRISM retains $r\!=\!0.53$ while raw mmWave drops to $r\!=\!0.24$,
+confirming that PRISM supports clinically meaningful exercise monitoring without
+requiring unobstructed sensor placement.
 
 \begin{table}[t]
   \centering
@@ -850,22 +852,21 @@ without unobstructed sensor placement even under severe through-obstacle attenua
       & 52.3 & 43.6 & 35.2 & 0.628
       & 138  & 163  & 191
       & 0.38 & 0.31 & 0.24 \\
-    PoinTr~\cite{pointr}
+    PoinTr~\cite{yu2021pointr}
       & 63.8 & 57.1 & 49.4 & 0.741
       & 116  & 147  & 172
       & 0.51 & 0.44 & 0.37 \\
-    TIGER~\cite{tiger}
+    TIGER~\cite{ren2024tiger}
       & 67.2 & 60.1 & 53.8 & 0.782
       & 104  & 131  & 158
       & 0.58 & 0.51 & 0.43 \\
     PRISM (ours)
-      & 73.1 & 66.8 & 59.3 & 0.851
-      & 84   & 96   & 112
-      & 0.68 & 0.61 & 0.53 \\
+      & \textbf{73.1} & \textbf{66.8} & \textbf{59.3} & \textbf{0.851}
+      & \textbf{84}   & \textbf{96}   & \textbf{112}
+      & \textbf{0.68} & \textbf{0.61} & \textbf{0.53} \\
     \bottomrule
   \end{tabular}}
 \end{table}
-
 % ────────────────────────────────────────────────────────────
 \section{Conclusion}
 \label{sec:conclusion}
@@ -880,11 +881,18 @@ geometry and action embeddings, and injecting this structural prior at every
 denoising step of a latent diffusion model.
 On MIST, PRISM achieves COV-CD 0.362 against 0.113 for the strongest completion
 baseline and maintains action-discriminative reconstruction at OL2 where all
-deterministic baselines collapse; downstream evaluations confirm that PRISM
+deterministic baselines collapse, and downstream evaluations confirm that PRISM
 reconstructions consistently outperform raw mmWave at every occlusion level, with
 OL2 outputs still surpassing raw mmWave under clear-view conditions.
 Together, MIST and PRISM provide a foundation for privacy-preserving,
 through-obstacle healthcare monitoring using mmWave radar alone.
+
+\paragraph{Limitations.}
+MIST covers a single barrier material, and generalization
+to metal, concrete, or composite walls remains untested.
+Future work should evaluate PRISM under a wider range of barrier types and
+thicknesses to characterize the material-dependent attenuation boundary of
+skeleton-guided reconstruction.
 
 % ────────────────────────────────────────────────────────────
 \begin{ack}
@@ -896,15 +904,11 @@ through-obstacle healthcare monitoring using mmWave radar alone.
 \bibliographystyle{unsrt}
 \bibliography{references}
 
-% ────────────────────────────────────────────────────────────
-% NeurIPS 2026 mandatory checklist (does NOT count toward page limit)
-% ────────────────────────────────────────────────────────────
-\newpage
-\input{checklist}
 
 % ============================================================
 %  Appendix  (unlimited pages; does NOT count toward page limit)
 % ============================================================
+
 \appendix
 
 % ============================================================
@@ -916,36 +920,36 @@ through-obstacle healthcare monitoring using mmWave radar alone.
 \label{app:mist_compare}
 
 Table~\ref{tab:mist_compare} compares representative mmWave human sensing datasets along
-five axes: \emph{Phys.\ Barrier}, indicating a physical object between sensor and subject;
-\emph{Paired}, indicating simultaneous clear-view and occluded captures of identical poses;
-\emph{LiDAR GT}, indicating synchronized overhead LiDAR as dense 3-D reconstruction ground truth;
-\emph{Skel/Mesh GT}, indicating skeleton or mesh annotations; and \emph{OL}, indicating the
+five axes, where \emph{Phys.\ Barrier} indicates a physical object between sensor and subject,
+\emph{Paired} indicates simultaneous clear-view and occluded captures of identical poses,
+\emph{LiDAR GT} indicates synchronized overhead LiDAR as dense 3-D reconstruction ground truth,
+\emph{Skel/Mesh GT} indicates skeleton or mesh annotations, and \emph{OL} indicates the
 number of controlled occlusion levels.
-RF-Pose uses sub-6\,GHz radio and produces 2-D skeleton heatmaps rather than a point cloud;
-mmBody's occlusion variant covers the sensor aperture rather than placing a physical barrier
+RF-Pose uses sub-6\,GHz radio and produces 2-D skeleton heatmaps rather than a point cloud,
+and mmBody's occlusion variant covers the sensor aperture rather than placing a physical barrier
 between sensor and subject.
 
 \paragraph{Obstacle-free benchmarks.}
 The dominant paradigm collects data under clear sensor--subject line-of-sight.
-mmMesh~\cite{mmmesh} pioneered real-time human mesh construction from sparse 60\,GHz
+mmMesh~\cite{xue2021mmmesh} pioneered real-time human mesh construction from sparse 60\,GHz
 reflections but used only 20 subjects across 8 actions without any occlusion scenario.
-mmBody~\cite{mmbody} expanded action coverage to 100 categories and released paired mesh
-annotations; its occlusion variant attenuates the signal by placing absorbent material
+mmBody~\cite{chen2022mmbody} expanded action coverage to 100 categories and released paired mesh
+annotations, and its occlusion variant attenuates the signal by placing absorbent material
 over the sensor aperture rather than interposing a physical barrier, yielding no
 spatial selectivity, no clear-view reference, and no control over attenuation severity.
-mRI~\cite{mri} introduced a multimodal benchmark that pairs mmWave with RGB-D and inertial
+mRI~\cite{an2022mri} introduced a multimodal benchmark that pairs mmWave with RGB-D and inertial
 sensing for 3-D skeleton annotation, again under obstacle-free conditions.
-MM-Fi~\cite{yang2023mmfi} uniquely includes synchronized overhead LiDAR alongside mmWave,
+MM-Fi~\cite{yang2023mm} uniquely includes synchronized overhead LiDAR alongside mmWave,
 providing a dense reconstruction reference, but every session is collected in an open
 indoor space without any barrier between sensor and subject.
-M4Human~\cite{m4human} scales to 50 action categories and Vicon motion-capture mesh
+M4Human~\cite{fan2025m4human} scales to 50 action categories and Vicon motion-capture mesh
 annotations, providing the largest mmWave-to-mesh benchmark to date, yet retains the
 same obstacle-free assumption.
 Collectively, these datasets cannot evaluate degradation of reconstruction quality as
 radar returns are progressively attenuated by a real physical obstacle.
 
 \paragraph{Through-barrier and simulated-occlusion sensing.}
-RF-Pose~\cite{rfpose} demonstrated that a physical wall need not block human sensing, using
+RF-Pose~\cite{zhao2018through} demonstrated that a physical wall need not block human sensing, using
 sub-6\,GHz radio signals to produce 2-D skeleton heatmaps of subjects behind a wall.
 However, the sub-60\,GHz frequency band, 2-D output format, single fixed wall, and absence
 of a simultaneous clear-view reference or LiDAR reconstruction target leave mmWave-specific
@@ -953,9 +957,9 @@ dense point cloud reconstruction under controlled multi-level occlusion unaddres
 
 \paragraph{MIST.}
 MIST is the first mmWave dataset to simultaneously satisfy all three requirements.
-Occlusion levels are defined by cumulative board thickness: OL0 uses no board,
+Occlusion levels are defined by cumulative board thickness, where OL0 uses no board,
 OL1 interposes one 18\,mm wooden board, and OL2 stacks two boards totalling 36\,mm between
-the subject and one radar; a second co-located radar maintains an unobstructed path, so
+the subject and one radar, and a second co-located radar maintains an unobstructed path, so
 every frame provides a paired clear-view capture at OL0 and through-obstacle captures at OL1
 and OL2 of the identical pose.
 An overhead Livox Mid-360 LiDAR, physically separated from the barrier, provides dense
@@ -985,12 +989,12 @@ realistic through-barrier conditions.
       & \multirow{2}{*}{\makecell{mmWave\\pts/frame}} \\
     \\
     \midrule
-    RF-Pose~\cite{rfpose}         & 2018 & \checkmark           & \texttimes & \texttimes & \texttimes           & 1 & $\sim$100 & 1   & --           & -- \\
-    mmMesh~\cite{mmmesh}          & 2021 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 8   & $\sim$3k     & $\sim$50 \\
-    mmBody~\cite{mmbody}          & 2022 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 100 & $\sim$200k   & $\sim$200 \\
-    mRI~\cite{mri}                & 2022 & \texttimes           & \texttimes & \texttimes & \checkmark\ (skel)   & 1 & 20        & 12  & $\sim$160k   & 50--150 \\
-    MM-Fi~\cite{yang2023mmfi}     & 2023 & \texttimes           & \texttimes & \checkmark & \checkmark\ (skel)   & 1 & 40        & 27  & $>$320k      & 50--150 \\
-    M4Human~\cite{m4human}        & 2024 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 50  & $\sim$661k   & 50--150 \\
+    RF-Pose~\cite{zhao2018through}         & 2018 & \checkmark           & \texttimes & \texttimes & \texttimes           & 1 & $\sim$100 & 1   & --           & -- \\
+    mmMesh~\cite{xue2021mmmesh}          & 2021 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 8   & $\sim$3k     & $\sim$50 \\
+    mmBody~\cite{chen2022mmbody}          & 2022 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 100 & $\sim$200k   & $\sim$200 \\
+    mRI~\cite{an2022mri}                & 2022 & \texttimes           & \texttimes & \texttimes & \checkmark\ (skel)   & 1 & 20        & 12  & $\sim$160k   & 50--150 \\
+    MM-Fi~\cite{yang2023mm}     & 2023 & \texttimes           & \texttimes & \checkmark & \checkmark\ (skel)   & 1 & 40        & 27  & $>$320k      & 50--150 \\
+    M4Human~\cite{fan2025m4human}        & 2024 & \texttimes           & \texttimes & \texttimes & \checkmark\ (mesh)   & 1 & 20        & 50  & $\sim$661k   & 50--150 \\
     \midrule
     MIST (ours) & 2025
       & \checkmark & \checkmark & \checkmark & \checkmark\ (skel)
@@ -1038,12 +1042,12 @@ Of the 30 actions, 8 share equivalent kinematic categories with MM-Fi, enabling 
 \label{app:mist_sensor}
 
 Data collection took place in a controlled indoor laboratory with approximately
-5\,m $\times$ 6\,m usable floor area; subjects performed actions at 2--3\,m
+5\,m $\times$ 6\,m usable floor area, where subjects performed actions at 2--3\,m
 from the door-side sensor array.
 Two TI IWR6843 FMCW radars are co-located at door height ($\sim$1.0\,m), one
 maintaining a clear line-of-sight for OL0 and one operating through a wooden
-barrier of 18\,mm for OL1 or two stacked boards totalling 36\,mm for OL2;
-collecting both streams simultaneously ensures that every paired frame is
+barrier of 18\,mm for OL1 or two stacked boards totalling 36\,mm for OL2,
+and collecting both streams simultaneously ensures that every paired frame is
 captured at an identical subject pose.
 A Livox Mid-360 LiDAR is mounted overhead and extrinsic-calibrated to a shared
 world coordinate frame, providing 360° dense point clouds as reconstruction
@@ -1088,7 +1092,7 @@ The root contains one sub-directory per subject (S01--S08), and each subject
 directory is further divided by action (A01--A30, corresponding to R01--R14 and
 D01--D16).
 Within each action folder, the paired occlusion design is reflected directly in
-the directory structure: one sub-folder pairs OL0 (clear-view) with OL1
+the directory structure, where one sub-folder pairs OL0 (clear-view) with OL1
 (18\,mm board), and a second sub-folder pairs OL0 with OL2 (36\,mm total),
 so that every through-obstacle capture has an exact simultaneous clear-view
 counterpart at the same pose.
@@ -1115,8 +1119,8 @@ coordinates at 10\,fps.
 Table~\ref{tab:arch} lists the architecture hyperparameters for each PRISM
 module.
 All hidden dimensions, attention head counts, and layer depths are chosen to
-balance expressive capacity with single-GPU training feasibility on an
-NVIDIA RTX 3090.
+balance expressive capacity with training feasibility on
+three NVIDIA A6000 GPUs (48\,GB each).
 The HierVAE latent dimension of $8\times120$ is fixed prior to diffusion
 training and shared across all conditioning configurations.
 
@@ -1163,7 +1167,7 @@ training and shared across all conditioning configurations.
 \subsection{Training Schedule}
 \label{app:training}
 
-PRISM is trained in four sequential stages on a single NVIDIA RTX 3090 (24\,GB).
+PRISM is trained in four sequential stages on three NVIDIA A6000 GPUs (48\,GB each).
 Stage~1 pre-trains SkelKD at a learning rate of $10^{-3}$ with batch size 16 for
 5000 epochs (approximately 12\,h) and freezes it.
 Stage~2 trains HierVAE independently at $2\!\times\!10^{-4}$ with batch size 8
@@ -1173,8 +1177,8 @@ with frozen VAE at $2\!\times\!10^{-4}$ with batch size 16 for 5000 epochs
 (approximately 24\,h).
 Stage~4 fine-tunes all components except SkelKD end-to-end at $3\!\times\!10^{-5}$
 with batch size 16 for 2000 epochs (approximately 8\,h).
-All stages use Adam with cosine learning-rate decay, gradient clipping at 1.0, and 500 warm-up steps;
-Stages~3 and~4 additionally apply EMA with decay 0.9999.
+All stages use Adam with cosine learning-rate decay, gradient clipping at 1.0, and 500 warm-up steps,
+and Stages~3 and~4 additionally apply EMA with decay 0.9999.
 
 % ============================================================
 \section{Additional experiments}
@@ -1185,7 +1189,7 @@ Stages~3 and~4 additionally apply EMA with decay 0.9999.
 \label{app:mmfi_results}
 
 To evaluate cross-dataset generalisation, all models are trained on MIST-OL0 and
-evaluated directly on MM-Fi~\cite{yang2023mmfi}, a large-scale public benchmark
+evaluated directly on MM-Fi~\cite{yang2023mm}, a large-scale public benchmark
 comprising 40 subjects performing 27 action classes across 4 environments with
 synchronised mmWave point clouds and depth-camera skeleton ground truth under the
 H36M convention.
@@ -1193,7 +1197,7 @@ Evaluation covers the 8 action classes shared between MIST and MM-Fi, namely A03
 A12, A13, A17, A19, A22, A26, and A27, using test subjects S08 to S10 from
 environment E01.
 Baseline methods are additionally re-trained on MM-Fi subjects S01 to S07 to
-provide an in-domain upper bound; PRISM transfers directly from its MIST-trained
+provide an in-domain upper bound, while PRISM transfers directly from its MIST-trained
 weights without any MM-Fi-specific fine-tuning.
 
 Table~\ref{tab:mmfi_appendix} shows that PRISM achieves consistent improvements
@@ -1201,9 +1205,8 @@ on MM-Fi comparable to those on MIST-OL0.
 MMD-CD is 40.6\% lower than the best completion baseline PoinTr and COV-CD is
 220\% higher, confirming that skeleton-guided conditioning transfers across dataset
 conditions without any target-domain fine-tuning.
-The 1-NN-CD gap between PRISM and LION narrows compared to MIST, which is expected:
-with 7 training subjects in MM-Fi versus 6 in MIST-OL0, unconditional generative
-baselines benefit from a richer training distribution; PRISM's skeleton conditioning
+The 1-NN-CD gap between PRISM and LION narrows compared to MIST, which is expected, given that with 7 training subjects in MM-Fi versus 6 in MIST-OL0, unconditional generative
+baselines benefit from a richer training distribution, while PRISM's skeleton conditioning
 still provides the decisive structural advantage.
 The SnowflakeNet degradation, with COV-CD 0.081 falling below PCN at 0.086,
 replicates the pattern observed on MIST, confirming that multi-stage farthest-point
@@ -1212,7 +1215,7 @@ dataset artefact.
 
 \begin{table}[h]
   \centering
-  \caption{Cross-dataset generalization on MM-Fi across 8 overlapping action classes on test subjects S08 to S10. Methods marked $^*$ are re-trained on MM-Fi; PRISM transfers directly from MIST-trained weights without fine-tuning.}
+  \caption{Cross-dataset generalization on MM-Fi across 8 overlapping action classes on test subjects S08 to S10. Methods marked $^*$ are re-trained on MM-Fi, while PRISM transfers directly from MIST-trained weights without fine-tuning.}
   \label{tab:mmfi_appendix}
   \small
   \setlength{\tabcolsep}{5pt}
@@ -1221,13 +1224,13 @@ dataset artefact.
     Method & Venue & Type
            & MMD-CD$\downarrow$ & COV-CD$\uparrow$ & 1-NN-CD$\downarrow$ \\
     \midrule
-    PCN$^*$~\cite{pcn}               & 3DV'18     & Compl. & 0.00887 & 0.0855 & 0.9994 \\
-    PoinTr$^*$~\cite{pointr}         & ICCV'21    & Compl. & 0.00813 & 0.1172 & 0.9989 \\
-    SnowflakeNet$^*$~\cite{snowflake}& ICCV'21    & Compl. & 0.01056 & 0.0808 & 0.9998 \\
-    LAKe-Net$^*$~\cite{lakenet}      & CVPR'22    & Compl. & 0.00856 & 0.0878 & 0.9993 \\
-    mmPoint$^*$~\cite{mmpoint}       & BMVC'23    & Radar  & 0.00877 & 0.0991 & 0.9995 \\
-    LION$^*$~\cite{lion}             & NeurIPS'22 & Gen.   & 0.00724 & 0.1892 & 0.9813 \\
-    TIGER$^*$~\cite{tiger}           & CVPR'24    & Gen.   & 0.00695 & 0.2147 & 0.9776 \\
+    PCN$^*$~\cite{yuan2018pcn}               & 3DV'18     & Compl. & 0.00887 & 0.0855 & 0.9994 \\
+    PoinTr$^*$~\cite{yu2021pointr}         & ICCV'21    & Compl. & 0.00813 & 0.1172 & 0.9989 \\
+    SnowflakeNet$^*$~\cite{xiang2021snowflakenet}& ICCV'21    & Compl. & 0.01056 & 0.0808 & 0.9998 \\
+    LAKe-Net$^*$~\cite{tang2022lake}      & CVPR'22    & Compl. & 0.00856 & 0.0878 & 0.9993 \\
+    mmPoint$^*$~\cite{xie2023mmpoint}       & BMVC'23    & Radar  & 0.00877 & 0.0991 & 0.9995 \\
+    LION$^*$~\cite{vahdat2022lion}             & NeurIPS'22 & Gen.   & 0.00724 & 0.1892 & 0.9813 \\
+    TIGER$^*$~\cite{ren2024tiger}           & CVPR'24    & Gen.   & 0.00695 & 0.2147 & 0.9776 \\
     \midrule
     PRISM (ours)                     & --         & Gen.   & 0.00483 & 0.3748 & 0.9697 \\
     \bottomrule
@@ -1272,7 +1275,7 @@ fixed-template output.
 
 \begin{table}[h]
   \centering
-  \caption{Through-obstacle robustness on MIST (zero-shot from OL0 training). $\Delta$COV: relative COV-CD change from OL0; COV/MMD: COV-CD/MMD-CD.}
+  \caption{Through-obstacle robustness on MIST (zero-shot from OL0 training). $\Delta$COV: relative COV-CD change from OL0, COV/MMD: COV-CD/MMD-CD.}
   \label{tab:mist_per_level}
   \small
   \setlength{\tabcolsep}{3.5pt}
@@ -1284,16 +1287,16 @@ fixed-template output.
       & MMD$\downarrow$ & COV$\uparrow$ & 1-NN$\downarrow$ & $\Delta$COV
       & MMD$\downarrow$ & COV$\uparrow$ & 1-NN$\downarrow$ & $\Delta$COV \\
     \midrule
-    PCN$^*$~\cite{pcn}
+    PCN$^*$~\cite{yuan2018pcn}
       & Compl. & 0.0142 & 0.051 & 0.9961 & $-38.6\%$
                & 0.0182 & 0.021 & 0.9983 & $-74.7\%$ \\
-    PoinTr$^*$~\cite{pointr}
+    PoinTr$^*$~\cite{yu2021pointr}
       & Compl. & 0.0126 & 0.067 & 0.9949 & $-40.9\%$
                & 0.0166 & 0.031 & 0.9973 & $-72.6\%$ \\
-    SnowflakeNet$^*$~\cite{snowflake}
+    SnowflakeNet$^*$~\cite{xiang2021snowflakenet}
       & Compl. & 0.0183 & 0.039 & 0.9972 & $-50.6\%$
                & 0.0225 & 0.017 & 0.9990 & $-78.5\%$ \\
-    mmPoint$^*$~\cite{mmpoint}
+    mmPoint$^*$~\cite{xie2023mmpoint}
       & Radar  & 0.0151 & 0.054 & 0.9957 & $-44.3\%$
                & 0.0191 & 0.024 & 0.9979 & $-75.2\%$ \\
     PRISM (ours)
@@ -1315,7 +1318,7 @@ fixed-template output.
   \centering
   \includegraphics[width=\linewidth]{assets/fig/qual_comparison.jpg}
   \caption{
-    Cross-action qualitative comparison: four actions (rows) versus six methods
+    Cross-action qualitative comparison of four actions (rows) versus six methods
     (columns), with LiDAR ground truth as the rightmost column.
   }
   \label{fig:qual}
@@ -1323,34 +1326,61 @@ fixed-template output.
 
 Figure~\ref{fig:qual} illustrates the two dominant failure modes of baseline methods.
 For distal limb actions such as Wave Hand and Kick, all baselines produce a neutral
-standing shape regardless of pose: the sparse radar returns from a raised arm or
+standing shape regardless of pose, as the sparse radar returns from a raised arm or
 swinging leg are insufficient to activate the nearest-neighbour features that
 completion backbones rely on, and unconditional generative methods lack the structural
 prior needed to distinguish these configurations from rest.
-Squat exposes a different failure mode: the full-body postural change distributes
+Squat exposes a different failure mode, as the full-body postural change distributes
 returns across an unusual spatial extent, causing baselines to average over the
 observed cloud and yield a blurred, anatomically inconsistent shape.
 Per-frame skeleton conditioning steers PRISM toward the correct kinematic state in
 all four actions, producing body shapes that faithfully match the LiDAR ground truth
 silhouette and limb arrangement.
 
+\subsection{Temporal reconstruction across a bowing sequence}
+\label{app:teaser}
+
+\begin{figure}[h]
+  \centering
+  \includegraphics[width=\linewidth, height=12cm, keepaspectratio]{assets/fig/temporal_bow.jpg}
+  \caption{
+    Temporal point cloud reconstruction across three timesteps of a bowing
+    sequence, comparing baseline methods and PRISM against LiDAR ground truth.
+  }
+  \label{fig:temporal_bow}
+\end{figure}
+
+Figure~\ref{fig:temporal_bow} compares point cloud reconstruction across three
+timesteps of a bowing sequence, from an upright starting pose through mid-bow
+to the fully extended bow.
+All four baselines produce a near-identical upright silhouette at every timestep
+regardless of the pronounced trunk flexion between frames, as completion backbones
+trained on rigid objects have no mechanism to track continuous non-rigid articulation
+and unconditional generative models converge to the marginal body distribution
+independent of the sparse radar input.
+PRISM faithfully tracks the bow arc at each step, progressively deepening the
+trunk angle while maintaining anatomically plausible limb geometry, because the
+radar-aligned skeleton joints injected as conditioning tokens at every denoising
+step anchor the reconstruction to the current kinematic state of the subject.
+This temporal fidelity emerges from per-frame conditioning alone and requires no
+explicit across-frame sequence modelling.
+
 \subsection{Latent diffusion process}
 \label{app:diffusion}
 
 Figure~\ref{fig:diffusion_process} visualises the step-by-step reverse process
 in the HierVAE latent space for a single bowing frame.
-Panels progress from pure noise at $t\!=\!1.0$ to the fully denoised output at $t\!=\!0$.
+Each panel shows the decoded point cloud at a fixed denoising timestep, from
+pure noise at $t\!=\!1.0$ on the left to the fully denoised output at $t\!=\!0$
+on the right.
 Starting from isotropic Gaussian noise, the Dynamic Transformer
 progressively resolves global body structure before refining local pose detail.
-
-Across all 30 MIST action classes, actions with large limb displacements,
-including Hip Flexion (R07), Forward Kick (D14), and Waving Hand (D11),
-establish recognisable global body structure as early as $t\!=\!0.6$,
-as skeleton K/V tokens inject a strong kinematic prior at every denoising layer.
+This coarse-to-fine behaviour is consistent across all 30 MIST action classes.
+Actions with large limb displacements, establish recognisable global body structure as early as
+$t\!=\!0.6$, as the skeleton K/V tokens inject a strong kinematic prior at every
+denoising layer.
 Actions with subtle distal motion maintain the correct global silhouette from
 $t\!=\!0.6$ but require later timesteps to resolve fine-grained limb configurations.
-Per-frame generation remains temporally coherent as SkelKD's joint tokens evolve
-smoothly across frames, propagating continuity without explicit temporal smoothing.
 
 \begin{figure}[h]
   \centering
@@ -1361,5 +1391,12 @@ smoothly across frames, propagating continuity without explicit temporal smoothi
   }
   \label{fig:diffusion_process}
 \end{figure}
+
+% ────────────────────────────────────────────────────────────
+% NeurIPS 2026 mandatory checklist (does NOT count toward page limit)
+% ────────────────────────────────────────────────────────────
+\newpage
+\input{checklist}
+
 
 \end{document}
