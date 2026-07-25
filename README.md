@@ -10,8 +10,7 @@
   <img src="assets/fig/PRISM architecture overview.jpg" width="900"/>
 </p>
 
-> A skeleton-guided conditional latent diffusion framework for dense human point cloud reconstruction from sparse mmWave radar, paired with MIST — the first mmWave dataset with a physical barrier between sensor and subject.
-
+> Overview of PRISM’s two-path architecture
 ---
 
 ## Abstract

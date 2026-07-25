@@ -17,7 +17,7 @@
 \item {\bf Limitations}
     \item[] Question: Does the paper discuss the limitations of the work performed by the authors?
     \item[] Answer: \answerYes{}
-    \item[] Justification: The Conclusion in Section~6 contains a dedicated Limitations paragraph identifying that MIST covers a single barrier material of 18\,mm wooden boards and that generalization to metal, concrete, or composite walls remains untested. The paragraph also identifies future directions for characterizing material-dependent attenuation boundaries.
+    \item[] Justification: A dedicated Limitations section appears before the Conclusion in Section~\ref{sec:limitations} and discusses four distinct limitations. First, MIST uses a single barrier material of 18\,mm wooden boards, and reconstruction quality under metal, concrete, or laminated glass barriers remains uncharacterized. Second, the dataset covers only eight subjects from a single laboratory, which may limit cross-population generalization. Third, PRISM requires 200 denoising steps at inference time, resulting in latency incompatible with real-time deployment on a single GPU. Fourth, both MIST and PRISM assume a single subject, and multi-person through-obstacle scenarios fall outside the current scope.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that the paper has no limitation while the answer \answerNo{} means that the paper has limitations, but those are not discussed in the paper.
@@ -33,7 +33,7 @@
 \item {\bf Theory assumptions and proofs}
     \item[] Question: For each theoretical result, does the paper provide the full set of assumptions and a complete (and correct) proof?
     \item[] Answer: \answerNA{}
-    \item[] Justification: The paper presents an empirical systems contribution with no formal theorems, lemmas, or mathematical proofs. All equations describe architectural design choices such as attention formulations, the VP-SDE forward process, and training objectives rather than theoretical results requiring proof.
+    \item[] Justification: The paper presents an empirical systems contribution with no formal theorems, lemmas, or mathematical proofs. All equations describe architectural design choices such as attention formulations, the DDPM forward diffusion process, and training objectives rather than theoretical results requiring proof.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that the paper does not include theoretical results.
@@ -67,7 +67,7 @@
 \item {\bf Open access to data and code}
     \item[] Question: Does the paper provide open access to the data and code, with sufficient instructions to faithfully reproduce the main experimental results, as described in supplemental material?
     \item[] Answer: \answerYes{}
-    \item[] Justification: An anonymized project page with code repository and MIST dataset samples is referenced in the abstract. The repository includes training scripts, evaluation code, baseline re-implementations, and environment configuration. The full MIST dataset will be publicly released upon acceptance.
+    \item[] Justification: The authors have prepared a project page, a GitHub repository containing training scripts, evaluation code, baseline re-implementations, and environment configuration, and the full MIST dataset. All three will be made publicly available upon acceptance of the paper.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that paper does not include experiments requiring code.
@@ -136,7 +136,7 @@
 \item {\bf Broader impacts}
     \item[] Question: Does the paper discuss both potential positive societal impacts and negative societal impacts of the work performed?
     \item[] Answer: \answerYes{}
-    \item[] Justification: The introduction and conclusion discuss positive societal impact including privacy-preserving human sensing for healthcare monitoring and elderly care under obstacle or darkness conditions. The mmWave modality's inherent privacy advantage of producing no visual appearance data is explicitly highlighted. A negative impact that should be acknowledged is that through-obstacle sensing could be misused for covert surveillance, and a corresponding discussion should be added to the broader impact section before final submission.
+    \item[] Justification: The introduction and conclusion discuss positive societal impact including privacy-preserving human sensing for healthcare monitoring and elderly care under obstacle or darkness conditions. The mmWave modality's inherent privacy advantage of producing no visual appearance data is explicitly highlighted. A potential negative impact is that through-obstacle sensing could be misused for covert surveillance, which is acknowledged in the introduction and conclusion alongside the positive applications.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that there is no societal impact of the work performed.
@@ -214,7 +214,7 @@
     \item[] Question: Does the paper describe the usage of LLMs if it is an important, original, or non-standard component of the core methods in this research? Note that if the LLM is used only for writing, editing, or formatting purposes and does \emph{not} impact the core methodology, scientific rigor, or originality of the research, declaration is not required.
     %this research?
     \item[] Answer: \answerNA{}
-    \item[] Justification: No LLMs are used as a component of PRISM's core methodology. The architecture consists entirely of conventional deep learning modules including 1D CNNs, GCN, hierarchical VAE, and a Transformer-based denoising network. LLMs were not used in any role that impacts scientific rigor or originality.
+    \item[] Justification: No LLMs are used as a component of PRISM's core methodology. The architecture consists entirely of conventional deep learning modules including 1D CNNs, a graph convolutional network encoder, a coarse point generator, and a Transformer-based diffusion denoiser. LLMs were not used in any role that impacts scientific rigor or originality.
     \item[] Guidelines:
     \begin{itemize}
         \item The answer \answerNA{} means that the core method development in this research does not involve LLMs as any important, original, or non-standard components.
